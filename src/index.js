@@ -10,19 +10,67 @@ app.use(cors());
 const users = [];
 
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+  const user = users.find(user => user.username === username);
+  if (!user) {
+    return response.status(404).json({ error: "Customer not found!" })
+  }
+  request.user = user
+  return next();
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  const { user } = request;
+  if (!user.pro && user.todos.length >= 10) {
+    return response.status(403).json({ error: "To create more taks sign the PRO PLAN!" })
+  }
+  return next();
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  //const { user } = request;
+  const { username } = request.headers;
+  const { id } = request.params;
+
+  //const id = todo.id;
+  const regexExp = /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/gi;
+
+  /* 
+    01 => Validar que p 'usuario' exista
+    02 => Validar que o 'id' do todo sejá um UIID
+    03 => Validar que o 'ID' pertence a um todo do 'usuario' informado
+  */
+
+  // TESTE 01
+  const user = users.find(user => user.username === username);
+  if (!user) {
+    return response.status(404).json({ error: "Customer not found!" })
+  }
+
+  // TESTE 03
+  if (!regexExp.test(id)) {
+    return response.status(400).json({ error: "ID invalid!" })
+  }
+
+  // TESTE 03
+  const todo = user.todos.find(todo => todo.id === id);
+  if (!regexExp.test(id) && !todo) {
+    return response.status(404).json({ error: "Todo does not belong to the user!" })
+  }
+
+  request.user = user
+  request.todo = todo
+  return next();
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const { id } = request.params;
+  const user = users.find(user => user.id === id);
+  if (!user) {
+    return response.status(404).json({ error: "Customer not found!" })
+  }
+  request.user = user
+  return next();
 }
 
 app.post('/users', (request, response) => {
